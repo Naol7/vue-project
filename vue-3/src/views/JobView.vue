@@ -1,23 +1,48 @@
 <script setup>
+import PulseLoader from 'vue-spinner/src/PulseLoader.vue';
+import axios from 'axios';
+import BackButton from '@/components/BackButton.vue';
+import {reactive, onMounted } from 'vue';
+import { useRoute, RouterLink } from 'vue-router';
+
+const route = useRoute();
+
+const jobId = route.params.id;
+
+const state = reactive ({
+  job: {},
+  isLoading: true
+})
+onMounted(async () => {
+  try {
+    const response = await axios.get(`http://localhost:5000/jobs/${jobId}`)
+    state.job = response.data
+  } catch (error) {
+    console.error('Error fetching job', error)
+  } finally {
+    state.isLoading = false;
+  }
+})
 
 </script>
 <template>
-     <section class="bg-green-50">
+  <BackButton/>
+     <section v-if="!state.isLoading" class="bg-green-50">
       <div class="container px-6 py-10 m-auto">
         <div class="grid w-full grid-cols-1 gap-6 md:grid-cols-70/30">
           <main>
             <div
               class="p-6 text-center bg-white rounded-lg shadow-md md:text-left"
             >
-              <div class="mb-4 text-gray-500">Full-Time</div>
-              <h1 class="mb-4 text-3xl font-bold">Senior Vue Developer</h1>
+              <div class="mb-4 text-gray-500">{{ state.job.type }}</div>
+              <h1 class="mb-4 text-3xl font-bold">{{ state.job.title }}</h1>
               <div
                 class="flex justify-center mb-4 text-gray-500 align-middle md:justify-start"
               >
                 <i
                   class="mr-2 text-lg text-orange-700 fa-solid fa-location-dot"
                 ></i>
-                <p class="text-orange-700">Boston, MA</p>
+                <p class="text-orange-700">{{ state.job.location }}</p>
               </div>
             </div>
 
@@ -27,15 +52,12 @@
               </h3>
 
               <p class="mb-4">
-                We are seeking a talented Front-End Developer to join our team
-                in Boston, MA. The ideal candidate will have strong skills in
-                HTML, CSS, and JavaScript, with experience working with modern
-                JavaScript frameworks such as Vue or Angular.
+                {{ state.job.description }}
               </p>
 
               <h3 class="mb-2 text-lg font-bold text-green-800">Salary</h3>
 
-              <p class="mb-4">$70k - $80K / Year</p>
+              <p class="mb-4">{{ state.job.salary }} / Year</p>
             </div>
           </main>
 
@@ -45,13 +67,10 @@
             <div class="p-6 bg-white rounded-lg shadow-md">
               <h3 class="mb-6 text-xl font-bold">Company Info</h3>
 
-              <h2 class="text-2xl">NewTek Solutions</h2>
+              <h2 class="text-2xl">{{ state.job.company.name }}</h2>
 
               <p class="my-2">
-                NewTek Solutions is a leading technology company specializing in
-                web development and digital solutions. We pride ourselves on
-                delivering high-quality products and services to our clients
-                while fostering a collaborative and innovative work environment.
+                {{ state.job.company.description }}
               </p>
 
               <hr class="my-4" />
@@ -59,22 +78,22 @@
               <h3 class="text-xl">Contact Email:</h3>
 
               <p class="p-2 my-2 font-bold bg-green-100">
-                contact@newteksolutions.com
+                {{ state.job.company.contactEmail }}
               </p>
 
               <h3 class="text-xl">Contact Phone:</h3>
 
-              <p class="p-2 my-2 font-bold bg-green-100">555-555-5555</p>
+              <p class="p-2 my-2 font-bold bg-green-100">{{ state.job.company.contactPhone }}</p>
             </div>
 
             <!-- Manage -->
             <div class="p-6 mt-6 bg-white rounded-lg shadow-md">
               <h3 class="mb-6 text-xl font-bold">Manage Job</h3>
-              <a
-                href="add-job.html"
+              <RouterLink
+                :to="`/jobs/edit/${state.job.id}`"
                 class="block w-full px-4 py-2 mt-4 font-bold text-center text-white bg-green-500 rounded-full hover:bg-green-600 focus:outline-none focus:shadow-outline"
-                >Edit Job</a
-              >
+                >Edit Job
+              </RouterLink>
               <button
                 class="block w-full px-4 py-2 mt-4 font-bold text-white bg-red-500 rounded-full hover:bg-red-600 focus:outline-none focus:shadow-outline"
               >
@@ -85,4 +104,7 @@
         </div>
       </div>
     </section>
+    <div v-else class="py-6 text-center text-gray-500">
+        <PulseLoader/>
+      </div>
 </template>
